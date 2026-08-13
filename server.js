@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
-
+const bcrypt = require("bcryptjs");
+const Usuarios = require("./model/Usuarios");
 const app = express();
 const PORT = 3000;
 
@@ -31,30 +32,34 @@ app.get("/adm", (req, res) => {
 });
 
 // Rota temporária para receber o formulário de login
-app.post("/login", (req, res) => {
+app.post("/login"), (req, res) => {
     const email = req.body.email;
     const senha = req.body.senha;
 
-    console.log("Tentativa de login:");
-    console.log("Email:", email);
-    console.log("Senha:", senha);
+    try{
+        const usuario = await Usuarios.buscarPorEmail(email);
 
-    // Por enquanto, depois de tentar login, manda para o ADM
-    res.redirect("/adm");
-});
+        if(usuario){
+            return res.redirect("/login");
+        }
 
-// Rota temporária para receber o formulário de cadastro
-app.post("/cadastro", (req, res) => {
-    const email = req.body.email;
-    const senha = req.body.senha;
+        const senhaCorreta = await bcrypt.compare{
+            senha, usuario.senha
+        }
 
-    console.log("Novo cadastro:");
-    console.log("Email:", email);
-    console.log("Senha:", senha);
+        if(!senhaCorreta){
+            return res.redirect("/login")
+        }
 
-    // Por enquanto, depois de cadastrar, manda para o login
-    res.redirect("/login");
-});
+        res.redirect("/adm")
+    }catch (erro){
+        console.error{
+            "erro ao fazer login: ", erro
+        }
+
+        res.redirect("/login")
+    }
+}
 
 // Inicia o servidor
 app.listen(PORT, () => {
